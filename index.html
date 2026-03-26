@@ -328,28 +328,36 @@
       <div class="grid-2">
         <div class="field">
           <label for="valor">Valor da operacao (R$)</label>
-          <input type="number" id="valor" placeholder="ex: 1588.47" min="0" step="0.01" oninput="calcular()">
+          <input type="number" id="valor" placeholder="ex: 1588.47" min="0" step="0.01" oninput="setLastEdited('valor'); calcular()">
         </div>
         <div class="field">
           <label for="dt_contrat">Data de contratacao</label>
-          <input type="date" id="dt_contrat" oninput="calcular()">
+          <input type="date" id="dt_contrat" oninput="setLastEdited('dt_contrat'); calcular()">
         </div>
       </div>
 
       <div class="grid-2">
         <div class="field">
           <label for="dt_saldo">Data do saldo devedor (hoje / portabilidade)</label>
-          <input type="date" id="dt_saldo" oninput="calcular()">
+          <input type="date" id="dt_saldo" oninput="setLastEdited('dt_saldo'); calcular()">
         </div>
         <div class="field">
           <label for="dt_venc">Data de vencimento</label>
-          <input type="date" id="dt_venc" oninput="calcular()">
+          <input type="date" id="dt_venc" oninput="setLastEdited('dt_venc'); calcular()">
+          <div class="hint">Pode ser preenchida manualmente ou calculada pelo prazo.</div>
         </div>
       </div>
 
-      <div class="field">
-        <label for="qtd">Quantidade de operacoes</label>
-        <input type="number" id="qtd" value="1" min="1" step="1" oninput="calcular()">
+      <div class="grid-2">
+        <div class="field">
+          <label for="prazo">Prazo do contrato (meses)</label>
+          <input type="number" id="prazo" min="1" max="120" step="1" placeholder="ex: 84" oninput="setLastEdited('prazo'); calcular()">
+          <div class="hint">Opcional. Se preencher, a data de vencimento sera calculada automaticamente.</div>
+        </div>
+        <div class="field">
+          <label for="qtd">Quantidade de operacoes</label>
+          <input type="number" id="qtd" value="1" min="1" step="1" oninput="setLastEdited('qtd'); calcular()">
+        </div>
       </div>
     </div>
 
@@ -427,11 +435,29 @@
       });
     }
 
+    let lastEdited = "";
+
+    function setLastEdited(id) {
+      lastEdited = id;
+    }
+
     function toISO(d) {
       const ano = d.getFullYear();
       const mes = String(d.getMonth() + 1).padStart(2, "0");
       const dia = String(d.getDate()).padStart(2, "0");
       return `${ano}-${mes}-${dia}`;
+    }
+
+    function addMeses(data, meses) {
+      const d = new Date(data);
+      d.setMonth(d.getMonth() + meses);
+      return d;
+    }
+
+    function diffMeses(a, b) {
+      let meses = (b.getFullYear() - a.getFullYear()) * 12 + (b.getMonth() - a.getMonth());
+      if (b.getDate() < a.getDate()) meses -= 1;
+      return meses;
     }
 
     function diffDias(a, b) {
@@ -471,9 +497,20 @@
     function calcular() {
       const valor = parseFloat(document.getElementById("valor").value);
       const qtd = Math.max(1, parseInt(document.getElementById("qtd").value, 10) || 1);
+      const prazoInput = document.getElementById("prazo");
+      const prazo = parseInt(prazoInput.value, 10);
       const dc = parseDate("dt_contrat");
       const ds = parseDate("dt_saldo");
-      const dv = parseDate("dt_venc");
+      const vencInput = document.getElementById("dt_venc");
+      let dv = parseDate("dt_venc");
+
+      if (dc && prazo > 0 && (lastEdited === "prazo" || lastEdited === "dt_contrat")) {
+        dv = addMeses(dc, prazo);
+        vencInput.value = toISO(dv);
+      } else if (dc && dv && (lastEdited === "dt_venc" || !prazoInput.value)) {
+        const meses = diffMeses(dc, dv);
+        prazoInput.value = meses > 0 ? meses : "";
+      }
 
       const faixaIdx = Number.isNaN(valor) || valor <= 0
         ? -1
@@ -487,7 +524,7 @@
       if (faixaIdx < 0) { setAlerta(null); resultados.classList.remove("show"); return; }
       if (!dc) { setAlerta("Informe a data de contratacao."); resultados.classList.remove("show"); return; }
       if (!ds) { setAlerta("Informe a data do saldo devedor."); resultados.classList.remove("show"); return; }
-      if (!dv) { setAlerta("Informe a data de vencimento."); resultados.classList.remove("show"); return; }
+      if (!dv) { setAlerta("Informe a data de vencimento ou o prazo do contrato."); resultados.classList.remove("show"); return; }
 
       const prazoTotal = diffDias(dc, dv);
       const prazoRestante = diffDias(ds, dv);
