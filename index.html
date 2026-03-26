@@ -12,13 +12,14 @@
     *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
 
     :root {
-      --bg: #252423;
-      --surface: #2e2d2b;
-      --surface2: #353432;
-      --border: rgba(255,255,255,0.12);
-      --text: #f0ece5;
-      --text2: #c7c1b8;
-      --text3: #a39d95;
+      --bg: #1f1d1a;
+      --surface: #2a2825;
+      --surface2: #34312d;
+      --border: rgba(255,255,255,0.14);
+      --border-strong: rgba(255,255,255,0.24);
+      --text: #f5f1e9;
+      --text2: #d2cbc0;
+      --text3: #ada59a;
       --accent: #4d93e6;
       --accent-light: #d6e7fb;
       --accent-mid: #4d93e6;
@@ -32,9 +33,11 @@
     body {
       font-family: "DM Sans", sans-serif;
       background: var(--bg);
+      background-image: radial-gradient(circle at top, rgba(77, 147, 230, 0.08), transparent 32%);
       color: var(--text);
       min-height: 100vh;
       padding: 40px 20px 80px;
+      color-scheme: dark;
     }
 
     .page {
@@ -86,10 +89,11 @@
 
     .card {
       background: var(--surface);
-      border: 1px solid var(--border);
+      border: 1px solid var(--border-strong);
       border-radius: var(--radius);
       padding: 24px;
       margin-bottom: 16px;
+      box-shadow: 0 18px 48px rgba(0, 0, 0, 0.18);
     }
 
     .card-title {
@@ -150,19 +154,38 @@
       height: 42px;
       padding: 0 14px;
       background: var(--surface2);
-      border: 1px solid var(--border);
+      border: 1px solid var(--border-strong);
       border-radius: var(--radius-sm);
       font-size: 14px;
       font-family: "DM Sans", sans-serif;
       color: var(--text);
       outline: none;
       transition: border-color 0.15s, box-shadow 0.15s;
+      color-scheme: dark;
     }
 
     .field input:focus {
       border-color: var(--accent-mid);
-      box-shadow: 0 0 0 3px rgba(50,102,173,0.1);
-      background: #fff;
+      box-shadow: 0 0 0 3px rgba(77, 147, 230, 0.2);
+      background: #3a3632;
+    }
+
+    .field input::placeholder {
+      color: var(--text3);
+    }
+
+    .field input[type="date"]::-webkit-calendar-picker-indicator {
+      filter: invert(1) brightness(1.15);
+      cursor: pointer;
+      opacity: 0.9;
+    }
+
+    .field input[type="date"]::-webkit-datetime-edit,
+    .field input[type="date"]::-webkit-datetime-edit-text,
+    .field input[type="date"]::-webkit-datetime-edit-month-field,
+    .field input[type="date"]::-webkit-datetime-edit-day-field,
+    .field input[type="date"]::-webkit-datetime-edit-year-field {
+      color: var(--text);
     }
 
     .field .hint {
@@ -180,7 +203,7 @@
 
     .metric {
       background: var(--surface);
-      border: 1px solid var(--border);
+      border: 1px solid var(--border-strong);
       border-radius: var(--radius-sm);
       padding: 16px;
     }
@@ -226,7 +249,7 @@
 
     .alert {
       background: rgba(240, 201, 106, 0.12);
-      border: 1px solid rgba(240, 201, 106, 0.35);
+      border: 1px solid rgba(240, 201, 106, 0.4);
       border-radius: var(--radius-sm);
       padding: 10px 14px;
       font-size: 13px;
@@ -266,8 +289,8 @@
     tr:last-child td { border-bottom: none; }
 
     tr.active td {
-      background: var(--accent-light);
-      color: var(--accent);
+      background: rgba(214, 231, 251, 0.9);
+      color: #173a63;
       font-weight: 600;
     }
 
@@ -297,7 +320,7 @@
 
     .result-card {
       background: var(--surface);
-      border: 1px solid var(--border);
+      border: 1px solid var(--border-strong);
       border-radius: var(--radius);
       padding: 24px;
       margin-bottom: 16px;
@@ -504,10 +527,13 @@
       const vencInput = document.getElementById("dt_venc");
       let dv = parseDate("dt_venc");
 
-      if (dc && prazo > 0 && (lastEdited === "prazo" || lastEdited === "dt_contrat")) {
+      if (dc && prazo > 0 && lastEdited === "prazo") {
         dv = addMeses(dc, prazo);
         vencInput.value = toISO(dv);
-      } else if (dc && dv && (lastEdited === "dt_venc" || !prazoInput.value)) {
+      } else if (dc && prazo > 0 && lastEdited === "dt_contrat" && !vencInput.value) {
+        dv = addMeses(dc, prazo);
+        vencInput.value = toISO(dv);
+      } else if (dc && dv) {
         const meses = diffMeses(dc, dv);
         prazoInput.value = meses > 0 ? meses : "";
       }
@@ -524,7 +550,7 @@
       if (faixaIdx < 0) { setAlerta(null); resultados.classList.remove("show"); return; }
       if (!dc) { setAlerta("Informe a data de contratacao."); resultados.classList.remove("show"); return; }
       if (!ds) { setAlerta("Informe a data do saldo devedor."); resultados.classList.remove("show"); return; }
-      if (!dv) { setAlerta("Informe a data de vencimento ou o prazo do contrato."); resultados.classList.remove("show"); return; }
+      if (!dv) { setAlerta("Informe a data de vencimento ou, se preferir, o prazo do contrato."); resultados.classList.remove("show"); return; }
 
       const prazoTotal = diffDias(dc, dv);
       const prazoRestante = diffDias(ds, dv);
