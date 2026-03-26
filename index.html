@@ -1,0 +1,562 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="description" content="Calculadora RCO INSS para calcular o custo proporcional do registro de contrato de operação.">
+  <title>Calculadora RCO INSS</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@300;400;500;600&family=DM+Mono:wght@400;500&display=swap" rel="stylesheet">
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    :root {
+      --bg: #F4F2EE;
+      --surface: #FFFFFF;
+      --surface2: #F0EDE8;
+      --border: rgba(0,0,0,0.1);
+      --text: #1A1814;
+      --text2: #6B6760;
+      --text3: #9E9B96;
+      --accent: #1B3F6E;
+      --accent-light: #E8EFF7;
+      --accent-mid: #3266AD;
+      --red: #8B2020;
+      --green: #1A5C2E;
+      --gold: #7A4F10;
+      --radius: 12px;
+      --radius-sm: 8px;
+    }
+
+    body {
+      font-family: "DM Sans", sans-serif;
+      background: var(--bg);
+      color: var(--text);
+      min-height: 100vh;
+      padding: 40px 20px 80px;
+    }
+
+    .page {
+      max-width: 860px;
+      margin: 0 auto;
+    }
+
+    .header {
+      margin-bottom: 36px;
+    }
+
+    .header-tag {
+      display: inline-block;
+      font-size: 11px;
+      font-weight: 500;
+      letter-spacing: 0.1em;
+      text-transform: uppercase;
+      color: var(--accent-mid);
+      background: var(--accent-light);
+      padding: 4px 12px;
+      border-radius: 100px;
+      margin-bottom: 12px;
+    }
+
+    .header h1 {
+      font-size: 32px;
+      font-weight: 600;
+      letter-spacing: -0.5px;
+      line-height: 1.2;
+    }
+
+    .header p {
+      font-size: 15px;
+      color: var(--text2);
+      margin-top: 8px;
+      line-height: 1.6;
+      max-width: 520px;
+    }
+
+    .grid-2 {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 16px;
+    }
+
+    @media (max-width: 620px) {
+      .grid-2 { grid-template-columns: 1fr; }
+    }
+
+    .card {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      padding: 24px;
+      margin-bottom: 16px;
+    }
+
+    .card-title {
+      font-size: 11px;
+      font-weight: 600;
+      letter-spacing: 0.08em;
+      text-transform: uppercase;
+      color: var(--text3);
+      margin-bottom: 20px;
+    }
+
+    .formula-card {
+      background: var(--accent);
+      border-radius: var(--radius);
+      padding: 20px 24px;
+      margin-bottom: 16px;
+      color: #fff;
+    }
+
+    .formula-card .label {
+      font-size: 11px;
+      font-weight: 500;
+      letter-spacing: 0.08em;
+      text-transform: uppercase;
+      opacity: 0.6;
+      margin-bottom: 10px;
+    }
+
+    .formula-card .expr {
+      font-family: "DM Mono", monospace;
+      font-size: 13px;
+      line-height: 1.9;
+      opacity: 0.92;
+    }
+
+    .formula-card .expr span {
+      background: rgba(255,255,255,0.12);
+      padding: 2px 8px;
+      border-radius: 4px;
+      font-weight: 500;
+    }
+
+    .field {
+      margin-bottom: 16px;
+    }
+
+    .field label {
+      display: block;
+      font-size: 12px;
+      font-weight: 500;
+      color: var(--text2);
+      margin-bottom: 6px;
+      letter-spacing: 0.01em;
+    }
+
+    .field input {
+      width: 100%;
+      height: 42px;
+      padding: 0 14px;
+      background: var(--surface2);
+      border: 1px solid var(--border);
+      border-radius: var(--radius-sm);
+      font-size: 14px;
+      font-family: "DM Sans", sans-serif;
+      color: var(--text);
+      outline: none;
+      transition: border-color 0.15s, box-shadow 0.15s;
+    }
+
+    .field input:focus {
+      border-color: var(--accent-mid);
+      box-shadow: 0 0 0 3px rgba(50,102,173,0.1);
+      background: #fff;
+    }
+
+    .field .hint {
+      font-size: 11px;
+      color: var(--text3);
+      margin-top: 4px;
+    }
+
+    .metrics-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(160px, 1fr));
+      gap: 12px;
+      margin-bottom: 16px;
+    }
+
+    .metric {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: var(--radius-sm);
+      padding: 16px;
+    }
+
+    .metric .m-label {
+      font-size: 11px;
+      color: var(--text3);
+      font-weight: 500;
+      letter-spacing: 0.03em;
+      margin-bottom: 6px;
+    }
+
+    .metric .m-value {
+      font-size: 22px;
+      font-weight: 600;
+      line-height: 1.1;
+    }
+
+    .metric .m-value.red { color: var(--red); }
+    .metric .m-value.green { color: var(--green); }
+    .metric .m-value.small { font-size: 14px; padding-top: 4px; font-weight: 500; }
+
+    .metric .m-sub {
+      font-size: 11px;
+      color: var(--text3);
+      margin-top: 4px;
+    }
+
+    .prog-bg {
+      height: 5px;
+      background: var(--surface2);
+      border-radius: 3px;
+      margin-top: 8px;
+      overflow: hidden;
+    }
+
+    .prog-fill {
+      height: 5px;
+      background: var(--accent-mid);
+      border-radius: 3px;
+      transition: width 0.4s ease;
+    }
+
+    .alert {
+      background: #FFF8E6;
+      border: 1px solid #F5D87A;
+      border-radius: var(--radius-sm);
+      padding: 10px 14px;
+      font-size: 13px;
+      color: var(--gold);
+      margin-bottom: 16px;
+      display: none;
+    }
+
+    .alert.show { display: block; }
+
+    .table-wrap { overflow-x: auto; }
+
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      font-size: 13px;
+    }
+
+    th {
+      text-align: left;
+      padding: 10px 14px;
+      background: var(--surface2);
+      color: var(--text2);
+      font-weight: 600;
+      font-size: 11px;
+      letter-spacing: 0.05em;
+      text-transform: uppercase;
+      border-bottom: 1px solid var(--border);
+    }
+
+    td {
+      padding: 10px 14px;
+      border-bottom: 1px solid var(--border);
+      color: var(--text);
+    }
+
+    tr:last-child td { border-bottom: none; }
+
+    tr.active td {
+      background: var(--accent-light);
+      color: var(--accent);
+      font-weight: 600;
+    }
+
+    tr.active td:first-child {
+      border-left: 3px solid var(--accent-mid);
+      padding-left: 11px;
+    }
+
+    .empty {
+      text-align: center;
+      padding: 32px;
+      color: var(--text3);
+      font-size: 14px;
+    }
+
+    .empty-icon {
+      font-size: 32px;
+      margin-bottom: 8px;
+    }
+
+    .footer {
+      text-align: center;
+      font-size: 12px;
+      color: var(--text3);
+      margin-top: 48px;
+    }
+
+    .result-card {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      padding: 24px;
+      margin-bottom: 16px;
+      display: none;
+    }
+
+    .result-card.show { display: block; }
+  </style>
+</head>
+<body>
+  <div class="page">
+    <div class="header">
+      <div class="header-tag">Credito Consignado INSS</div>
+      <h1>Calculadora RCO</h1>
+      <p>Calcula o custo proporcional do Registro de Contrato de Operacao com base no prazo restante do contrato.</p>
+    </div>
+
+    <div class="formula-card">
+      <div class="label">Formula oficial</div>
+      <div class="expr">
+        custo efetivo = <span>valor fixo</span> x ( <span>dt. vencimento - dt. saldo devedor</span> ) ÷ ( <span>dt. vencimento - dt. contratacao</span> )
+      </div>
+    </div>
+
+    <div class="card">
+      <div class="card-title">Dados da operacao</div>
+
+      <div class="grid-2">
+        <div class="field">
+          <label for="valor">Valor da operacao (R$)</label>
+          <input type="number" id="valor" placeholder="ex: 10000" min="0" step="100" oninput="calcular()">
+        </div>
+        <div class="field">
+          <label for="qtd">Quantidade de operacoes</label>
+          <input type="number" id="qtd" value="1" min="1" step="1" oninput="calcular()">
+        </div>
+      </div>
+
+      <div class="grid-2">
+        <div class="field">
+          <label for="dt_contrat">Data de contratacao</label>
+          <input type="date" id="dt_contrat" oninput="calcular()">
+          <div class="hint">Data em que o contrato foi firmado.</div>
+        </div>
+        <div class="field">
+          <label for="prazo">Prazo do contrato (meses)</label>
+          <input type="number" id="prazo" placeholder="ex: 84" min="1" max="120" step="1" oninput="calcular()">
+          <div class="hint">Prazo original. A data de vencimento sera calculada automaticamente.</div>
+        </div>
+      </div>
+
+      <div class="grid-2">
+        <div class="field">
+          <label for="dt_saldo">Data do saldo devedor</label>
+          <input type="date" id="dt_saldo" oninput="calcular()">
+          <div class="hint">Data da portabilidade ou registro.</div>
+        </div>
+        <div class="field">
+          <label for="dt_venc">Data de vencimento (calculada)</label>
+          <input type="date" id="dt_venc" readonly style="background:#f5f5f2; color: var(--text2); cursor:default;">
+          <div class="hint">Preenchida automaticamente a partir da contratacao + prazo.</div>
+        </div>
+      </div>
+    </div>
+
+    <div class="alert" id="alerta"></div>
+
+    <div class="result-card" id="resultados">
+      <div class="card-title">Resultado</div>
+      <div class="metrics-grid">
+        <div class="metric">
+          <div class="m-label">Valor fixo da faixa</div>
+          <div class="m-value" id="r_fixo">-</div>
+        </div>
+        <div class="metric">
+          <div class="m-label">Prazo restante / total</div>
+          <div class="m-value small" id="r_prazo">-</div>
+          <div class="prog-bg"><div class="prog-fill" id="r_bar" style="width:0%"></div></div>
+          <div class="m-sub" id="r_pct_prazo"></div>
+        </div>
+        <div class="metric">
+          <div class="m-label">Custo efetivo (1 op.)</div>
+          <div class="m-value red" id="r_efetivo">-</div>
+        </div>
+        <div class="metric">
+          <div class="m-label">Custo total (x qtd.)</div>
+          <div class="m-value red" id="r_total">-</div>
+        </div>
+        <div class="metric">
+          <div class="m-label">% sobre o valor op.</div>
+          <div class="m-value" id="r_pct">-</div>
+        </div>
+        <div class="metric">
+          <div class="m-label">Economia vs. fixo cheio</div>
+          <div class="m-value green" id="r_econo">-</div>
+          <div class="m-sub" id="r_econo_sub"></div>
+        </div>
+      </div>
+    </div>
+
+    <div class="card">
+      <div class="card-title">Tabela de faixas - valor fixo</div>
+      <div class="table-wrap">
+        <table>
+          <thead>
+            <tr>
+              <th>Faixa do valor da operacao</th>
+              <th>Custo fixo</th>
+              <th>Faixa ativa</th>
+            </tr>
+          </thead>
+          <tbody id="tbody">
+            <tr><td colspan="3" class="empty"><div class="empty-icon">↑</div>Preencha os dados acima para ver a faixa aplicavel.</td></tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+
+    <div class="footer">Calculadora RCO INSS · Publicavel via GitHub Pages</div>
+  </div>
+
+  <script>
+    const faixas = [
+      { label: "De R$0 a R$2.000,00", min: 0, max: 2000, custo: 196 },
+      { label: "De R$2.000,01 a R$4.000,00", min: 2000.01, max: 4000, custo: 253 },
+      { label: "De R$4.000,01 a R$8.000,00", min: 4000.01, max: 8000, custo: 325 },
+      { label: "De R$8.000,01 a R$15.000,00", min: 8000.01, max: 15000, custo: 545 },
+      { label: "De R$15.000,01 a R$40.000,00", min: 15000.01, max: 40000, custo: 835 },
+      { label: "De R$40.000,01 a R$60.000,00", min: 40000.01, max: 60000, custo: 1830 },
+      { label: "Acima de R$60.000,00", min: 60000.01, max: Infinity, custo: 2653 }
+    ];
+
+    function fmt(v) {
+      return "R$\u00A0" + v.toLocaleString("pt-BR", {
+        minimumFractionDigits: 2,
+        maximumFractionDigits: 2
+      });
+    }
+
+    function addMeses(data, meses) {
+      const d = new Date(data);
+      d.setMonth(d.getMonth() + meses);
+      return d;
+    }
+
+    function toISO(d) {
+      const ano = d.getFullYear();
+      const mes = String(d.getMonth() + 1).padStart(2, "0");
+      const dia = String(d.getDate()).padStart(2, "0");
+      return `${ano}-${mes}-${dia}`;
+    }
+
+    function diffDias(a, b) {
+      return Math.round((b - a) / 86400000);
+    }
+
+    function parseDate(id) {
+      const v = document.getElementById(id).value;
+      return v ? new Date(v + "T12:00:00") : null;
+    }
+
+    function buildTable(idx) {
+      const tb = document.getElementById("tbody");
+      tb.innerHTML = "";
+      faixas.forEach((f, i) => {
+        const tr = document.createElement("tr");
+        if (i === idx) tr.className = "active";
+        tr.innerHTML = `
+          <td>${f.label}</td>
+          <td style="font-family:'DM Mono',monospace">${fmt(f.custo)}</td>
+          <td>${i === idx ? "Aplicavel" : ""}</td>
+        `;
+        tb.appendChild(tr);
+      });
+    }
+
+    function setAlerta(msg) {
+      const el = document.getElementById("alerta");
+      if (msg) {
+        el.textContent = "Aviso: " + msg;
+        el.classList.add("show");
+      } else {
+        el.classList.remove("show");
+      }
+    }
+
+    function calcular() {
+      const valor = parseFloat(document.getElementById("valor").value);
+      const qtd = Math.max(1, parseInt(document.getElementById("qtd").value, 10) || 1);
+      const prazo = parseInt(document.getElementById("prazo").value, 10);
+      const dc = parseDate("dt_contrat");
+      const ds = parseDate("dt_saldo");
+
+      let dv = null;
+      if (dc && prazo > 0) {
+        dv = addMeses(dc, prazo);
+        document.getElementById("dt_venc").value = toISO(dv);
+      } else {
+        document.getElementById("dt_venc").value = "";
+      }
+
+      const faixaIdx = Number.isNaN(valor) || valor <= 0
+        ? -1
+        : faixas.findIndex((f) => valor >= f.min && valor <= f.max);
+
+      buildTable(faixaIdx);
+
+      const resultados = document.getElementById("resultados");
+
+      if (!valor || valor <= 0) { setAlerta(null); resultados.classList.remove("show"); return; }
+      if (faixaIdx < 0) { setAlerta(null); resultados.classList.remove("show"); return; }
+      if (!dc) { setAlerta("Informe a data de contratacao."); resultados.classList.remove("show"); return; }
+      if (!prazo || prazo <= 0) { setAlerta("Informe o prazo em meses."); resultados.classList.remove("show"); return; }
+      if (!ds) { setAlerta("Informe a data do saldo devedor."); resultados.classList.remove("show"); return; }
+
+      const prazoTotal = diffDias(dc, dv);
+      const prazoRestante = diffDias(ds, dv);
+
+      if (prazoTotal <= 0) {
+        setAlerta("Prazo total invalido. Verifique as datas.");
+        resultados.classList.remove("show");
+        return;
+      }
+      if (prazoRestante <= 0) {
+        setAlerta("A data do saldo devedor e posterior ao vencimento. Contrato encerrado.");
+        resultados.classList.remove("show");
+        return;
+      }
+      if (prazoRestante > prazoTotal) {
+        setAlerta("A data do saldo devedor e anterior a contratacao.");
+        resultados.classList.remove("show");
+        return;
+      }
+
+      setAlerta(null);
+
+      const fixo = faixas[faixaIdx].custo;
+      const fator = prazoRestante / prazoTotal;
+      const efetivo = fixo * fator;
+      const total = efetivo * qtd;
+      const pct = (efetivo / valor) * 100;
+      const econo = (fixo - efetivo) * qtd;
+      const pctPrazo = Math.round(fator * 100);
+
+      document.getElementById("r_fixo").textContent = fmt(fixo);
+      document.getElementById("r_prazo").textContent = `${prazoRestante}d / ${prazoTotal}d`;
+      document.getElementById("r_bar").style.width = pctPrazo + "%";
+      document.getElementById("r_pct_prazo").textContent = pctPrazo + "% do prazo restante";
+      document.getElementById("r_efetivo").textContent = fmt(efetivo);
+      document.getElementById("r_total").textContent = fmt(total);
+      document.getElementById("r_pct").textContent = pct.toFixed(3) + "%";
+      document.getElementById("r_econo").textContent = fmt(econo);
+      document.getElementById("r_econo_sub").textContent = qtd > 1 ? `em ${qtd} operacoes` : "vs. custo cheio";
+
+      resultados.classList.add("show");
+    }
+
+    document.getElementById("dt_saldo").value = toISO(new Date());
+    buildTable(-1);
+  </script>
+</body>
+</html>
