@@ -12,19 +12,19 @@
     *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
 
     :root {
-      --bg: #F4F2EE;
-      --surface: #FFFFFF;
-      --surface2: #F0EDE8;
-      --border: rgba(0,0,0,0.1);
-      --text: #1A1814;
-      --text2: #6B6760;
-      --text3: #9E9B96;
-      --accent: #1B3F6E;
-      --accent-light: #E8EFF7;
-      --accent-mid: #3266AD;
-      --red: #8B2020;
-      --green: #1A5C2E;
-      --gold: #7A4F10;
+      --bg: #252423;
+      --surface: #2e2d2b;
+      --surface2: #353432;
+      --border: rgba(255,255,255,0.12);
+      --text: #f0ece5;
+      --text2: #c7c1b8;
+      --text3: #a39d95;
+      --accent: #4d93e6;
+      --accent-light: #d6e7fb;
+      --accent-mid: #4d93e6;
+      --red: #e04646;
+      --green: #4f9d2f;
+      --gold: #f0c96a;
       --radius: 12px;
       --radius-sm: 8px;
     }
@@ -225,8 +225,8 @@
     }
 
     .alert {
-      background: #FFF8E6;
-      border: 1px solid #F5D87A;
+      background: rgba(240, 201, 106, 0.12);
+      border: 1px solid rgba(240, 201, 106, 0.35);
       border-radius: var(--radius-sm);
       padding: 10px 14px;
       font-size: 13px;
@@ -312,7 +312,7 @@
     <div class="header">
       <div class="header-tag">Credito Consignado INSS</div>
       <h1>Calculadora RCO</h1>
-      <p>Calcula o custo proporcional do Registro de Contrato de Operacao com base no prazo restante do contrato.</p>
+      <p>Calcula o custo proporcional do Registro de Contrato de Operacao com base na formula oficial.</p>
     </div>
 
     <div class="formula-card">
@@ -328,38 +328,28 @@
       <div class="grid-2">
         <div class="field">
           <label for="valor">Valor da operacao (R$)</label>
-          <input type="number" id="valor" placeholder="ex: 10000" min="0" step="100" oninput="calcular()">
+          <input type="number" id="valor" placeholder="ex: 1588.47" min="0" step="0.01" oninput="calcular()">
         </div>
-        <div class="field">
-          <label for="qtd">Quantidade de operacoes</label>
-          <input type="number" id="qtd" value="1" min="1" step="1" oninput="calcular()">
-        </div>
-      </div>
-
-      <div class="grid-2">
         <div class="field">
           <label for="dt_contrat">Data de contratacao</label>
           <input type="date" id="dt_contrat" oninput="calcular()">
-          <div class="hint">Data em que o contrato foi firmado.</div>
-        </div>
-        <div class="field">
-          <label for="prazo">Prazo do contrato (meses)</label>
-          <input type="number" id="prazo" placeholder="ex: 84" min="1" max="120" step="1" oninput="calcular()">
-          <div class="hint">Prazo original. A data de vencimento sera calculada automaticamente.</div>
         </div>
       </div>
 
       <div class="grid-2">
         <div class="field">
-          <label for="dt_saldo">Data do saldo devedor</label>
+          <label for="dt_saldo">Data do saldo devedor (hoje / portabilidade)</label>
           <input type="date" id="dt_saldo" oninput="calcular()">
-          <div class="hint">Data da portabilidade ou registro.</div>
         </div>
         <div class="field">
-          <label for="dt_venc">Data de vencimento (calculada)</label>
-          <input type="date" id="dt_venc" readonly style="background:#f5f5f2; color: var(--text2); cursor:default;">
-          <div class="hint">Preenchida automaticamente a partir da contratacao + prazo.</div>
+          <label for="dt_venc">Data de vencimento</label>
+          <input type="date" id="dt_venc" oninput="calcular()">
         </div>
+      </div>
+
+      <div class="field">
+        <label for="qtd">Quantidade de operacoes</label>
+        <input type="number" id="qtd" value="1" min="1" step="1" oninput="calcular()">
       </div>
     </div>
 
@@ -437,12 +427,6 @@
       });
     }
 
-    function addMeses(data, meses) {
-      const d = new Date(data);
-      d.setMonth(d.getMonth() + meses);
-      return d;
-    }
-
     function toISO(d) {
       const ano = d.getFullYear();
       const mes = String(d.getMonth() + 1).padStart(2, "0");
@@ -468,7 +452,7 @@
         tr.innerHTML = `
           <td>${f.label}</td>
           <td style="font-family:'DM Mono',monospace">${fmt(f.custo)}</td>
-          <td>${i === idx ? "Aplicavel" : ""}</td>
+          <td>${i === idx ? "✓" : ""}</td>
         `;
         tb.appendChild(tr);
       });
@@ -487,17 +471,9 @@
     function calcular() {
       const valor = parseFloat(document.getElementById("valor").value);
       const qtd = Math.max(1, parseInt(document.getElementById("qtd").value, 10) || 1);
-      const prazo = parseInt(document.getElementById("prazo").value, 10);
       const dc = parseDate("dt_contrat");
       const ds = parseDate("dt_saldo");
-
-      let dv = null;
-      if (dc && prazo > 0) {
-        dv = addMeses(dc, prazo);
-        document.getElementById("dt_venc").value = toISO(dv);
-      } else {
-        document.getElementById("dt_venc").value = "";
-      }
+      const dv = parseDate("dt_venc");
 
       const faixaIdx = Number.isNaN(valor) || valor <= 0
         ? -1
@@ -510,8 +486,8 @@
       if (!valor || valor <= 0) { setAlerta(null); resultados.classList.remove("show"); return; }
       if (faixaIdx < 0) { setAlerta(null); resultados.classList.remove("show"); return; }
       if (!dc) { setAlerta("Informe a data de contratacao."); resultados.classList.remove("show"); return; }
-      if (!prazo || prazo <= 0) { setAlerta("Informe o prazo em meses."); resultados.classList.remove("show"); return; }
       if (!ds) { setAlerta("Informe a data do saldo devedor."); resultados.classList.remove("show"); return; }
+      if (!dv) { setAlerta("Informe a data de vencimento."); resultados.classList.remove("show"); return; }
 
       const prazoTotal = diffDias(dc, dv);
       const prazoRestante = diffDias(ds, dv);
